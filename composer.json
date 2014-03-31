@@ -1,0 +1,8 @@
+{
+    "require": {
+        "nategood/commando": "*"
+    },
+    "autoload": {
+        "psr-0": {"": "lib/"}
+    }
+}

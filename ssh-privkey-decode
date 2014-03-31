@@ -1,0 +1,88 @@
+#!/usr/bin/env php
+<?php
+// strict error bailout
+function strict_error_handler($errno, $errstr, $errfile, $errline)
+{
+    die ("STRICT: {$errno} {$errstr} {$errfile} {$errline} ".PHP_EOL);
+}
+set_error_handler("strict_error_handler");
+
+require 'vendor/autoload.php';
+
+define('MAX_PRIV_KEY_FILE_SIZE', 10240); // 適当である
+define('MAX_INPUT_FILE_SIZE', 1024); // 適当である
+
+// Command Line option
+$cmd = new \Commando\Command();
+$cmd->option('k')
+    ->aka('privkey')
+    ->require()
+    ->must(function($key) {
+        // file path
+        if(file_exists($key)){
+            return true;
+        }
+        return false;
+    })
+    ->describedAs("private key file.");
+
+$cmd->option('i')
+    ->aka('infile')
+    ->describedAs('input encoded file');
+
+$cmd->option('o')
+    ->aka('outfile')
+    ->describedAs('output decoded file');
+
+$cmd->option('r')
+    ->aka('raw')
+    ->aka('binary')
+    ->describedAs('Don\'t base64 decode ')
+    ->boolean();
+
+// load key
+if(filesize($cmd['k'])>MAX_PRIV_KEY_FILE_SIZE){
+    die('huge key file. really?');
+}
+$ssh_priv_key = file_get_contents($cmd['k']);
+
+// get pass phrase
+echo "please type pass phrase (or blank) :";
+system('stty -echo'); // disable local echo (hide input pass phrase)
+$pass_phrase = fgets(STDIN);
+$pass_phrase = rtrim($pass_phrase);
+system('stty echo'); // restore local echo
+echo "\n";
+
+// load data
+if($cmd['i']){
+    if(!file_exists($cmd['i'])){
+        die('input file not found.');
+    }
+
+    if(filesize($cmd['i'])>MAX_INPUT_FILE_SIZE){
+        die('input file size too big.');
+    }
+
+    $data = file_get_contents($cmd['i']);
+}else{
+    echo "paste data and Enter,^D \n";
+    $data = file_get_contents('php://stdin');
+}
+
+// decode base64.
+if(!$cmd['r']){
+    $data = base64_decode($data);
+}
+
+$plain = \Uzulla\Crypt\Misc::decodeBySshPrivKey($ssh_priv_key, $pass_phrase, $data);
+unset($pass_phrase);
+
+// Output
+if($cmd['o']){
+    file_put_contents($cmd['o'], $plain);
+}else{
+    echo $plain.PHP_EOL;
+}
+
+

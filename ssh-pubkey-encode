@@ -1,0 +1,102 @@
+#!/usr/bin/env php
+<?php
+// strict error bailout
+function strict_error_handler($errno, $errstr, $errfile, $errline)
+{
+    die ("STRICT: {$errno} {$errstr} {$errfile} {$errline} ".PHP_EOL);
+}
+set_error_handler("strict_error_handler");
+
+require 'vendor/autoload.php';
+
+define('MAX_INPUT_SIZE', 100); // SSHのキー長で変わるが、（1024なら100文字強、2048なら255くらい）とりあえず100
+define('MAX_PUB_KEY_FILE_SIZE', 1024);
+
+// Command Line option
+$cmd = new \Commando\Command();
+$cmd->option('k')
+    ->aka('pubkey')
+    ->require()
+    ->must(function($key) {
+        // uzulla:0 形式
+        if(preg_match("/^[a-zA-Z0-9_]+(:[0-9]+)$/", $key)){
+            //todo そのユーザーが存在するか
+            return true;
+        }
+
+        // 鍵を直接引数
+        if(preg_match("/^ssh\-rsa/", $key)){
+            return true;
+        }
+
+        // file path
+        if(file_exists($key)){
+            return true;
+        }
+
+        return false;
+    })
+    ->describedAs("ex: \n
+    GitHub: -k 'uzulla:0'. Get pubkey from github https://github.com/user_name.keys  , :0 is row num\n
+    direct key: -k 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQ(snip)'\n
+    file path: -k '~/.ssh/id_rsa.pub' ");
+
+$cmd->option('i')
+    ->aka('infile')
+    ->describedAs('input_plain_file:max '.MAX_INPUT_SIZE.' byte');
+
+$cmd->option('o')
+    ->aka('outfile')
+    ->describedAs('output encoded file');
+
+$cmd->option('r')
+    ->aka('raw')
+    ->aka('binary')
+    ->describedAs('Don\'t base64 encode ')
+    ->boolean();
+
+// get ssh-pub-key
+$matches = null;
+$ssh_pub_key = null;
+if(preg_match("/^([a-zA-Z0-9_]+):([0-9]+)$/", $cmd['k'], $matches)){
+    $github_user_name = $matches[1];
+    $row_num = $matches[2];
+    $key_list_url = "https://github.com/{$github_user_name}.keys";
+    $key_list_str = file_get_contents($key_list_url);
+    $key_list = explode("\n", $key_list_str);
+    $ssh_pub_key = $key_list[(int)$row_num];
+}elseif(preg_match("/^(ssh\-rsa .*)$/", $cmd['k'], $matches)){
+    $ssh_pub_key = $matches[1];
+}elseif(file_exists($cmd['k']) && filesize($cmd['k']) < MAX_PUB_KEY_FILE_SIZE ){
+    $ssh_pub_key = file_get_contents($cmd['k']);
+}else{
+    die('any key passed!');
+}
+
+// load input file
+if(!$cmd['i']){
+    $str = file_get_contents('php://stdin');
+    if(strlen($str) > MAX_INPUT_SIZE){
+        die("exceeds input file size.");
+    }
+}else{
+    if(filesize($cmd['i']) > MAX_INPUT_SIZE){
+        die("exceeds input file size.");
+    }
+    $str = file_get_contents($cmd['i']);
+}
+
+// Encrypt
+$crypted = \Uzulla\Crypt\Misc::encodeBySshPubKey($ssh_pub_key, $str);
+
+// Base64 encode.
+if(!$cmd['raw']){
+    $crypted = chunk_split(base64_encode($crypted), 76, "\n");
+}
+
+// Output
+if($cmd['o']){
+    file_put_contents($cmd['o'], $crypted);
+}else{
+    echo $crypted;
+}

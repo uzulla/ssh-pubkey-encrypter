@@ -26,6 +26,9 @@ class Misc {
         $plain = null;
         openssl_private_decrypt($str, $plain, $priv_key);
         openssl_free_key($priv_key);
+        if(is_null($plain)){
+            throw new \Exception("Decode fail. maybe wrong key.");
+        }
 
         return $plain;
     }

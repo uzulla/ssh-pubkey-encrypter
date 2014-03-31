@@ -16,7 +16,7 @@ define('MAX_INPUT_FILE_SIZE', 1024); // 適当である
 $cmd = new \Commando\Command();
 $cmd->option('k')
     ->aka('privkey')
-    ->require()
+    ->default(getenv('HOME').'/.ssh/id_rsa')
     ->must(function($key) {
         // file path
         if(file_exists($key)){
@@ -41,6 +41,10 @@ $cmd->option('r')
     ->boolean();
 
 // load key
+if(!file_exists($cmd['k'])){
+    die('require private key');
+}
+
 if(filesize($cmd['k'])>MAX_PRIV_KEY_FILE_SIZE){
     die('huge key file. really?');
 }

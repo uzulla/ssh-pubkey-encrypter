@@ -23,6 +23,39 @@ $ php composer.phar install
 $ ./ssh-pubkey-encode --help
 ```
 
+# how to QUICK use.
+
+### encode
+
+```
+$ ./ssh-pubkey-encode -k github_user_name:0
+TYPE AS YOU WANT(enter)
+(^D)
+APA(SNIP!)GA=
+```
+
+-iや-oを省略すると、標準入出力を使います。
+
+`$ echo 'hoge'|./ssh-pubkey-encode〜`も勿論つかえます
+
+### decode
+
+```
+$ ./ssh-privkey-decode
+please type pass phrase (or blank) :
+paste data and Enter,^D
+APA(SNIP!)GA=(enter)
+(^D)
+TYPE AS YOU WANT
+```
+
+いきなり起動して、パスフレーズを入力すると、入力をうけつける状態になりますので、データをペーストし、Enterし、^Dすることでデコードされます。
+
+-iや-oを省略すると、標準入出力を使います。
+
+-kを省略すると`~/.ssh/id_rsa`を指定したのと同じになります。
+
+
 # how to use
 
 ```

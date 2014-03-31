@@ -1,5 +1,7 @@
 #!/usr/bin/env php
 <?php
+ini_set("display_errors", 0);
+error_reporting(-1);
 register_shutdown_function(
     function(){
         $e = error_get_last();

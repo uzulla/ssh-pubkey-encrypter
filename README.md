@@ -72,7 +72,7 @@ $ cat encode.txt |base64 -D | openssl rsautl -decrypt -inkey ~/.ssh/id_rsa
 
 # other option
 
-see `php --help`
+see `ssh-pubkey-encode --help`
 
 ```
 $ ssh-pubkey-encode --help

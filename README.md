@@ -1,10 +1,15 @@
 ssh-pubkey-encrypter
 ==========================
 
-Encode short text(<=100byte) by ssh public RSA key. Receiver can decode by own openssl command with pair private key.
+Encode short text(<=100byte. ex: zip password) by ssh public RSA key. Receiver can decode by own openssl command with pair private key.
+
+Oh, Don't you know friend's ssh-rsa key? no problem, Github disclose ssh public RSA key in `https://github.com/uzulla.keys`, that's very usefull. this tool can pick ssh-rsa key from that.
+
 
 Githubなどで公開されているユーザーのssh公開鍵（RSAのみ）をつかって、短いテキストを暗号化できます。復号は対応する秘密鍵を使います。
 システムに入っているopensslコマンドで複合する事も可能です。
+
+ssh-rsa鍵を相手から聞くのが面倒…とおもうでしょうが、Githubは`https://github.com/uzulla.keys`などのURLで公開鍵を公開しています。このツールはそこから鍵をひっぱってこれます、便利。
 
 とりあえず短いテキストしか暗号化できませんが、「ZIPパスワードは別メールで送ります」がいい加減アレなのでつくりました。
 
@@ -25,7 +30,7 @@ $ ./ssh-pubkey-encode --help
 
 # how to QUICK use.
 
-### encode
+## encode
 
 ```
 $ ./ssh-pubkey-encode -k github_user_name:0
@@ -38,7 +43,19 @@ APA(SNIP!)GA=
 
 `$ echo 'hoge'|./ssh-pubkey-encode〜`も勿論つかえます
 
-### decode
+
+### select public key `-k` option
+
+`-k`で公開鍵を指定します、Githubユーザー名や、ファイル名や、直接公開鍵を文字列で指定できます。
+Githubユーザー名を指定すると、`http://github.com/uzulla.keys`などから取得します。複数公開鍵を登録している人もいるので、何行目か指定してください（0行目からです）。
+
+```
+GitHub: -k 'uzulla:0'. Get pubkey from github https://github.com/user_name.keys  , :0 is row num
+direct key: -k 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQ(snip)'
+file path: -k '~/.ssh/id_rsa.pub'
+```
+
+## decode
 
 ```
 $ ./ssh-privkey-decode
@@ -49,14 +66,14 @@ APA(SNIP!)GA=(enter)
 TYPE AS YOU WANT
 ```
 
-いきなり起動して、パスフレーズを入力すると、入力をうけつける状態になりますので、データをペーストし、Enterし、^Dすることでデコードされます。
+いきなり起動して、パスフレーズを入力すると、入力をうけつける状態になりますので、データをペーストし、Enterし、`^D`することでデコードされます。
 
 -iや-oを省略すると、標準入出力を使います。
 
 -kを省略すると`~/.ssh/id_rsa`を指定したのと同じになります。
 
 
-# how to use
+# how to strict use
 
 ```
 # create text.
@@ -78,16 +95,6 @@ $ cat decode.txt
 secret text
 ```
 
-## select public key
-
-Githubユーザー名や、ファイル名や、直接公開鍵を文字列で指定できます。
-Githubユーザー名を指定すると、`http://github.com/uzulla.keys`などから取得します。複数公開鍵を登録している人もいるので、何行目か指定してください（0行目からです）。
-
-```
-GitHub: -k 'uzulla:0'. Get pubkey from github https://github.com/user_name.keys  , :0 is row num
-direct key: -k 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQ(snip)'
-file path: -k '~/.ssh/id_rsa.pub'
-```
 
 # DON'T USE INSANE OPTION
 

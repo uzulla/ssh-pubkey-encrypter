@@ -3,13 +3,14 @@
 ini_set("display_errors", 0);
 error_reporting(-1);
 register_shutdown_function(
-    function(){
+    function () {
         $e = error_get_last();
-        if( $e['type'] == E_ERROR ||
+        if ($e['type'] == E_ERROR ||
             $e['type'] == E_PARSE ||
             $e['type'] == E_CORE_ERROR ||
             $e['type'] == E_COMPILE_ERROR ||
-            $e['type'] == E_USER_ERROR ){
+            $e['type'] == E_USER_ERROR
+        ) {
             echo "FATAL ERROR:\n";
             echo "Error type:\t {$e['type']}\n";
             echo "Error message:\t {$e['message']}\n";
@@ -18,7 +19,7 @@ register_shutdown_function(
         }
     }
 );
-set_error_handler(function($errno, $errstr, $errfile, $errline){
+set_error_handler(function ($errno, $errstr, $errfile, $errline) {
     throw new ErrorException($errstr, $errno, 0, $errfile, $errline);
 });
 
@@ -32,20 +33,20 @@ $cmd = new \Commando\Command();
 $cmd->option('k')
     ->aka('pubkey')
     ->require()
-    ->must(function($key) {
+    ->must(function ($key) {
         // uzulla:0 形式
-        if(preg_match("/^[a-zA-Z0-9_]+(:[0-9]+)$/", $key)){
+        if (preg_match("/^[a-zA-Z0-9_]+(:[0-9]+)$/", $key)) {
             //todo そのユーザーが存在するか
             return true;
         }
 
         // 鍵を直接引数
-        if(preg_match("/^ssh\-rsa/", $key)){
+        if (preg_match("/^ssh\-rsa/", $key)) {
             return true;
         }
 
         // file path
-        if(file_exists($key)){
+        if (file_exists($key)) {
             return true;
         }
 
@@ -58,7 +59,7 @@ $cmd->option('k')
 
 $cmd->option('i')
     ->aka('infile')
-    ->describedAs('input_plain_file:max '.MAX_INPUT_SIZE.' byte');
+    ->describedAs('input_plain_file:max ' . MAX_INPUT_SIZE . ' byte');
 
 $cmd->option('o')
     ->aka('outfile')
@@ -73,56 +74,56 @@ $cmd->option('r')
 // get ssh-pub-key
 $matches = null;
 $ssh_pub_key = null;
-if(preg_match("/^([a-zA-Z0-9_]+):([0-9]+)$/", $cmd['k'], $matches)){
+if (preg_match("/^([a-zA-Z0-9_]+):([0-9]+)$/", $cmd['k'], $matches)) {
     $github_user_name = $matches[1];
     $row_num = $matches[2];
     $key_list_url = "https://github.com/{$github_user_name}.keys";
-    try{
+    try {
         $key_list_str = file_get_contents($key_list_url);
-    }catch(\Exception $e){
-        die('get github key fail. maybe wrong user name'.PHP_EOL);
+    } catch (\Exception $e) {
+        die('get github key fail. maybe wrong user name' . PHP_EOL);
     }
     $key_list = explode("\n", $key_list_str);
-    if(!isset($key_list[(int)$row_num])){
-        die('key row num is invalid'.PHP_EOL);
+    if (!isset($key_list[(int)$row_num])) {
+        die('key row num is invalid' . PHP_EOL);
     }
     $ssh_pub_key = $key_list[(int)$row_num];
-}elseif(preg_match("/^(ssh\-rsa .*)$/", $cmd['k'], $matches)){
+} elseif (preg_match("/^(ssh\-rsa .*)$/", $cmd['k'], $matches)) {
     $ssh_pub_key = $matches[1];
-}elseif(file_exists($cmd['k']) && filesize($cmd['k']) < MAX_PUB_KEY_FILE_SIZE ){
+} elseif (file_exists($cmd['k']) && filesize($cmd['k']) < MAX_PUB_KEY_FILE_SIZE) {
     $ssh_pub_key = file_get_contents($cmd['k']);
-}else{
+} else {
     die('any key passed!');
 }
 
 // load input file
-if(!$cmd['i']){
+if (!$cmd['i']) {
     $str = file_get_contents('php://stdin');
-    if(strlen($str) > MAX_INPUT_SIZE){
+    if (strlen($str) > MAX_INPUT_SIZE) {
         die("exceeds input file size.");
     }
-}else{
-    if(filesize($cmd['i']) > MAX_INPUT_SIZE){
+} else {
+    if (filesize($cmd['i']) > MAX_INPUT_SIZE) {
         die("exceeds input file size.");
     }
     $str = file_get_contents($cmd['i']);
 }
 
 // Encrypt
-try{
+try {
     $crypted = \Uzulla\Crypt\Misc::encodeBySshPubKey($ssh_pub_key, $str);
-}catch(\Exception $e){
-    die("decode fail. : ".$e->getMessage().PHP_EOL);
+} catch (\Exception $e) {
+    die("decode fail. : " . $e->getMessage() . PHP_EOL);
 }
 
 // Base64 encode.
-if(!$cmd['raw']){
+if (!$cmd['raw']) {
     $crypted = chunk_split(base64_encode($crypted), 76, "\n");
 }
 
 // Output
-if($cmd['o']){
+if ($cmd['o']) {
     file_put_contents($cmd['o'], $crypted);
-}else{
+} else {
     echo $crypted;
 }

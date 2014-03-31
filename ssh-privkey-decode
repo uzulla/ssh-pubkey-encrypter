@@ -3,13 +3,14 @@
 ini_set("display_errors", 0);
 error_reporting(-1);
 register_shutdown_function(
-    function(){
+    function () {
         $e = error_get_last();
-        if( $e['type'] == E_ERROR ||
+        if ($e['type'] == E_ERROR ||
             $e['type'] == E_PARSE ||
             $e['type'] == E_CORE_ERROR ||
             $e['type'] == E_COMPILE_ERROR ||
-            $e['type'] == E_USER_ERROR ){
+            $e['type'] == E_USER_ERROR
+        ) {
             echo "FATAL ERROR:\n";
             echo "Error type:\t {$e['type']}\n";
             echo "Error message:\t {$e['message']}\n";
@@ -18,7 +19,7 @@ register_shutdown_function(
         }
     }
 );
-set_error_handler(function($errno, $errstr, $errfile, $errline){
+set_error_handler(function ($errno, $errstr, $errfile, $errline) {
     throw new ErrorException($errstr, $errno, 0, $errfile, $errline);
 });
 
@@ -31,10 +32,10 @@ define('MAX_INPUT_FILE_SIZE', 1024); // 適当である
 $cmd = new \Commando\Command();
 $cmd->option('k')
     ->aka('privkey')
-    ->default(getenv('HOME').'/.ssh/id_rsa')
-    ->must(function($key) {
+    ->default(getenv('HOME') . '/.ssh/id_rsa')
+    ->must(function ($key) {
         // file path
-        if(file_exists($key)){
+        if (file_exists($key)) {
             return true;
         }
         return false;
@@ -59,62 +60,62 @@ $cmd->option('i_want_set_pass_phrase_option_i_am_sane')
     ->describedAs('Private key pass phrase, DON\'T USE THIS, if you sane.');
 
 // load key
-if(!file_exists($cmd['k'])){
+if (!file_exists($cmd['k'])) {
     die('require private key');
 }
 
-if(filesize($cmd['k'])>MAX_PRIV_KEY_FILE_SIZE){
+if (filesize($cmd['k']) > MAX_PRIV_KEY_FILE_SIZE) {
     die('huge key file. really?');
 }
 $ssh_priv_key = file_get_contents($cmd['k']);
 
 // get pass phrase
-if(is_null($cmd['i_want_set_pass_phrase_option_i_am_sane'])){
+if (is_null($cmd['i_want_set_pass_phrase_option_i_am_sane'])) {
     echo "please type pass phrase (or blank) :";
     system('stty -echo'); // disable local echo (hide input pass phrase)
     $pass_phrase = fgets(STDIN);
     $pass_phrase = rtrim($pass_phrase);
     system('stty echo'); // restore local echo
     echo "\n";
-}else{
+} else {
     $pass_phrase = $cmd['i_want_set_pass_phrase_option_i_am_sane'];
 }
 
 // load data
-if($cmd['i']){
-    if(!file_exists($cmd['i'])){
+if ($cmd['i']) {
+    if (!file_exists($cmd['i'])) {
         die('input file not found.');
     }
 
-    if(filesize($cmd['i'])>MAX_INPUT_FILE_SIZE){
+    if (filesize($cmd['i']) > MAX_INPUT_FILE_SIZE) {
         die('input file size too big.');
     }
 
     $data = file_get_contents($cmd['i']);
-}else{
-    if(is_null($cmd['i_want_set_pass_phrase_option_i_am_sane'])){
-        echo "paste data and Enter,^D".PHP_EOL;
+} else {
+    if (is_null($cmd['i_want_set_pass_phrase_option_i_am_sane'])) {
+        echo "paste data and Enter,^D" . PHP_EOL;
     }
     $data = file_get_contents('php://stdin');
 }
 
 // decode base64.
-if(!$cmd['r']){
+if (!$cmd['r']) {
     $data = base64_decode($data);
 }
 
-try{
+try {
     $plain = \Uzulla\Crypt\Misc::decodeBySshPrivKey($ssh_priv_key, $pass_phrase, $data);
-}catch(\Exception $e){
-    die("decode fail. : ".$e->getMessage().PHP_EOL);
+} catch (\Exception $e) {
+    die("decode fail. : " . $e->getMessage() . PHP_EOL);
 }
 unset($pass_phrase);
 
 // Output
-if($cmd['o']){
+if ($cmd['o']) {
     file_put_contents($cmd['o'], $plain);
-}else{
-    echo $plain.PHP_EOL;
+} else {
+    echo $plain . PHP_EOL;
 }
 
 

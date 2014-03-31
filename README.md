@@ -15,7 +15,7 @@ ssh-rsa鍵を相手から聞くのが面倒…とおもうでしょうが、Gith
 
 # require
 
-- PHP>=5.3(maybe, developing in 5.5)
+- PHP cli>=5.3(maybe, developing in 5.5)
 
 # install
 

@@ -53,6 +53,9 @@ $cmd->option('r')
     ->describedAs('Don\'t base64 decode ')
     ->boolean();
 
+$cmd->option('i_want_set_pass_phrase_option_i_am_sane')
+    ->describedAs('Private key pass phrase, DON\'T USE THIS, if you sane.');
+
 // load key
 if(!file_exists($cmd['k'])){
     die('require private key');
@@ -64,12 +67,16 @@ if(filesize($cmd['k'])>MAX_PRIV_KEY_FILE_SIZE){
 $ssh_priv_key = file_get_contents($cmd['k']);
 
 // get pass phrase
-echo "please type pass phrase (or blank) :";
-system('stty -echo'); // disable local echo (hide input pass phrase)
-$pass_phrase = fgets(STDIN);
-$pass_phrase = rtrim($pass_phrase);
-system('stty echo'); // restore local echo
-echo "\n";
+if(is_null($cmd['i_want_set_pass_phrase_option_i_am_sane'])){
+    echo "please type pass phrase (or blank) :";
+    system('stty -echo'); // disable local echo (hide input pass phrase)
+    $pass_phrase = fgets(STDIN);
+    $pass_phrase = rtrim($pass_phrase);
+    system('stty echo'); // restore local echo
+    echo "\n";
+}else{
+    $pass_phrase = $cmd['i_want_set_pass_phrase_option_i_am_sane'];
+}
 
 // load data
 if($cmd['i']){
@@ -83,7 +90,9 @@ if($cmd['i']){
 
     $data = file_get_contents($cmd['i']);
 }else{
-    echo "paste data and Enter,^D \n";
+    if(is_null($cmd['i_want_set_pass_phrase_option_i_am_sane'])){
+        echo "paste data and Enter,^D".PHP_EOL;
+    }
     $data = file_get_contents('php://stdin');
 }
 

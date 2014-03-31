@@ -89,6 +89,13 @@ direct key: -k 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQ(snip)'
 file path: -k '~/.ssh/id_rsa.pub'
 ```
 
+# DON'T USE INSANE OPTION
+
+```
+$ cat encoded.txt | ./ssh-privkey-decode --i_want_set_pass_phrase_option_i_am_sane 'mysecretpassphraseqazqwe1234'
+secret text
+```
+
 # Don't support DSA key
 
 DSAの鍵はサポートしていません。

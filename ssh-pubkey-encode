@@ -1,11 +1,24 @@
 #!/usr/bin/env php
 <?php
-// strict error bailout
-function strict_error_handler($errno, $errstr, $errfile, $errline)
-{
-    die ("STRICT: {$errno} {$errstr} {$errfile} {$errline} ".PHP_EOL);
-}
-set_error_handler("strict_error_handler");
+register_shutdown_function(
+    function(){
+        $e = error_get_last();
+        if( $e['type'] == E_ERROR ||
+            $e['type'] == E_PARSE ||
+            $e['type'] == E_CORE_ERROR ||
+            $e['type'] == E_COMPILE_ERROR ||
+            $e['type'] == E_USER_ERROR ){
+            echo "FATAL ERROR:\n";
+            echo "Error type:\t {$e['type']}\n";
+            echo "Error message:\t {$e['message']}\n";
+            echo "Error file:\t {$e['file']}\n";
+            echo "Error line:\t {$e['line']}\n";
+        }
+    }
+);
+set_error_handler(function($errno, $errstr, $errfile, $errline){
+    throw new ErrorException($errstr, $errno, 0, $errfile, $errline);
+});
 
 require 'vendor/autoload.php';
 
@@ -87,7 +100,11 @@ if(!$cmd['i']){
 }
 
 // Encrypt
-$crypted = \Uzulla\Crypt\Misc::encodeBySshPubKey($ssh_pub_key, $str);
+try{
+    $crypted = \Uzulla\Crypt\Misc::encodeBySshPubKey($ssh_pub_key, $str);
+}catch(\Exception $e){
+    die("decode fail. : ".$e->getMessage().PHP_EOL);
+}
 
 // Base64 encode.
 if(!$cmd['raw']){

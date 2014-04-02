@@ -1,6 +1,11 @@
 {
     "require": {
-        "nategood/commando": "*"
+        "nategood/commando": "*",
+        "slim/slim": "*",
+        "slim/views": "*",
+        "twig/twig": "*",
+        "fabpot/goutte": "*",
+        "slim/extras": "*"
     },
     "autoload": {
         "psr-0": {"": "lib/"}

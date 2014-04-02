@@ -1,0 +1,35 @@
+{% extends "_layout.twig" %}
+{% block content %}
+{% autoescape true %}
+<h1>Encode text by ssh-rsa public key</h1>
+<form method="post" action="{{ urlFor('encode') }}">
+    <input type="hidden" name="{{ csrf_key }}" value="{{ csrf_token }}">
+    <label>
+        ssh-rsa public key<br>
+        <input type="text" name="key" style="width:500px;"><br>
+        <ul>
+            <li>- acceptable format
+                <ul>
+                    <li>github user name and row num(0-origin): ex: "<span style="font-weight: bold">uzulla:0</span>"<br>
+                            (github disclose user ssh-rsa keys on https://github.com/user_name.keys) </li>
+                    <li>raw ssh-rsa pubkey string: ex: "<span style="font-weight: bold">ssh-rsa AAAAB3NzaC1yc2E(snip)</span>" </li>
+                </ul>
+            </li>
+        </ul>
+    </label><br>
+
+    <label>encode data<br>
+        <textarea name="data" maxlength="100" style="width:500px;"></textarea><br>
+        <ul>
+            <li>max 100byte</li>
+        </ul>
+    </label><br>
+
+    <h2 style="color:red">IMPORTANT</h2>
+    <p>DON'T SEND IMPORTANT TEXT if you don't trust this site (Perhaps, this is a sample site). SSL? of course must!!</p>
+    <p>You can encoding by <a href="https://github.com/uzulla/ssh-pubkey-encrypter">ssh-pubkey-encrypter</a> on your local machine.</p>
+
+    <input type="submit" value="DO ENCODING">
+</form>
+{% endautoescape %}
+{% endblock %}

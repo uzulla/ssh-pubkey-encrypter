@@ -28,6 +28,13 @@ $ php composer.phar install
 $ ./ssh-pubkey-encode --help
 ```
 
+# sample site
+
+[http://cfe.jp/ssh-pubkey-encrypter/](http://cfe.jp/ssh-pubkey-encrypter/)
+
+エンコードのみです。
+
+
 # how to QUICK use.
 
 ## encode

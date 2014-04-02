@@ -1,7 +1,7 @@
 <?php
 namespace SPE;
 class Logic{
-    static public function getPubKey($str){
+    static public function getPubKey($str, $disable_local=true){
         $matches = null;
         if (preg_match("/^([a-zA-Z0-9_]+):([0-9]+)$/", $str, $matches)) {
             $github_user_name = $matches[1];
@@ -19,7 +19,7 @@ class Logic{
             $ssh_pub_key = $key_list[(int)$row_num];
         } elseif (preg_match("/^(ssh-rsa .*)$/", $str, $matches)) {
             $ssh_pub_key = $matches[1];
-        } elseif (file_exists($str) && filesize($str) < MAX_PUB_KEY_FILE_SIZE) {
+        } elseif (!$disable_local && (file_exists($str) && filesize($str) < MAX_PUB_KEY_FILE_SIZE) ) {
             $ssh_pub_key = file_get_contents($str);
         } else {
             throw new \Exception('any key found');
@@ -29,6 +29,5 @@ class Logic{
 
     static public function encodeBase64($str){
         return chunk_split(base64_encode($str), 76, "\n");
-
     }
 }
